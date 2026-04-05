@@ -1,8 +1,9 @@
 import {RouterController} from "../../router-controller.type";
 import {Request, Response, Router} from "express";
-import {defineDto, field, parseObject} from "bookish-potato-dto";
+import {parseObject} from "bookish-potato-dto";
 import {methodNotAllowed, UnauthorizedHttpError} from "../../shared";
 import {AuthService} from "../../../domains/authentication";
+import {LoginDto, LogoutDto} from "../../../dtos";
 
 export class AuthRouter implements RouterController {
 
@@ -33,7 +34,7 @@ export class AuthRouter implements RouterController {
 
 
     private async login(req: Request, res: Response) {
-        const credentials = parseObject(AuthenticationCredentialsDto, req.body);
+        const credentials = parseObject(LoginDto, req.body);
 
         const authResult = await this.authService.login(credentials);
 
@@ -122,12 +123,4 @@ export class AuthRouter implements RouterController {
     }
 }
 
-const AuthenticationCredentialsDto = defineDto({
-    username: field.string(),
-    password: field.string(),
-});
-
-const LogoutDto = defineDto({
-    allDevices: field.boolean({isOptional: true}),
-});
 

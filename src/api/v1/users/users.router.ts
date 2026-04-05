@@ -1,9 +1,9 @@
 import {RouterController} from "../../router-controller.type";
 import {Request, RequestHandler, Response, Router} from "express";
-import {defineDto, field, parseObject} from "bookish-potato-dto";
+import {parseObject} from "bookish-potato-dto";
 import {ForbiddenHttpError, methodNotAllowed, requireRole, requireScope, UnauthorizedHttpError} from "../../shared";
 import {UsersService} from "../../../domains/users";
-import {UserRole} from "../../../generated/prisma/enums";
+import {ChangePasswordDto, CreateUserDto, UpdateUserRoleDto} from "../../../dtos";
 
 export class UsersRouter implements RouterController {
 
@@ -73,7 +73,7 @@ export class UsersRouter implements RouterController {
     }
 
     private async changePassword(req: Request, res: Response) {
-        const dto = parseObject(ChangePasswordBodyDto, req.body);
+        const dto = parseObject(ChangePasswordDto, req.body);
         const user = res.locals.user;
 
         if (!user) {
@@ -137,18 +137,4 @@ export class UsersRouter implements RouterController {
     }
 }
 
-const CreateUserDto = defineDto({
-    username: field.string(),
-    password: field.string(),
-    role: field.enum(UserRole, {isOptional: true, defaultValue: UserRole.USER}),
-});
-
-const ChangePasswordBodyDto = defineDto({
-    password: field.string(),
-    newPassword: field.string(),
-});
-
-const UpdateUserRoleDto = defineDto({
-    role: field.enum(UserRole),
-});
 
