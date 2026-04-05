@@ -1,7 +1,7 @@
 import {RouterController} from "../../router-controller.type";
 import {Request, Response, Router} from "express";
-import {parseObject} from "bookish-potato-dto";
-import {methodNotAllowed, UnauthorizedHttpError} from "../../shared";
+import {methodNotAllowed, TypedRequest, UnauthorizedHttpError} from "../../shared";
+import {validate} from "../../shared/middlewares/validate";
 import {AuthService} from "../../../domains/authentication";
 import {LoginDto, LogoutDto} from "../../../dtos";
 
@@ -18,11 +18,11 @@ export class AuthRouter implements RouterController {
         const router = Router();
 
         router.route('/login')
-            .post(this.login.bind(this))
+            .post(validate(LoginDto), this.login.bind(this))
             .all(methodNotAllowed);
 
         router.route('/logout')
-            .post(this.logout.bind(this))
+            .post(validate(LogoutDto), this.logout.bind(this))
             .all(methodNotAllowed);
 
         router.route('/refresh')
@@ -33,10 +33,8 @@ export class AuthRouter implements RouterController {
     }
 
 
-    private async login(req: Request, res: Response) {
-        const credentials = parseObject(LoginDto, req.body);
-
-        const authResult = await this.authService.login(credentials);
+    private async login(req: TypedRequest<LoginDto>, res: Response) {
+        const authResult = await this.authService.login(req.body);
 
         if (!authResult?.user) {
             throw new UnauthorizedHttpError('Invalid credentials');
@@ -62,7 +60,7 @@ export class AuthRouter implements RouterController {
     }
 
 
-    private async logout(req: Request, res: Response) {
+    private async logout(req: TypedRequest<LogoutDto>, res: Response) {
         // 1. Validate JWT token to ensure the user is authenticated before logging out
         const token = req.headers.authorization?.replace('Bearer ', '')
         if (!token) {
@@ -77,9 +75,7 @@ export class AuthRouter implements RouterController {
             throw new UnauthorizedHttpError('No refresh token provided');
         }
 
-        const body = parseObject(LogoutDto, req.body);
-
-        await this.authService.logout(refreshToken, body.allDevices);
+        await this.authService.logout(refreshToken, req.body.allDevices);
 
         // 3. Clear the refresh token cookie
         res.clearCookie('refreshToken', {

@@ -1,9 +1,16 @@
 import {RouterController} from "../../router-controller.type";
 import {Request, RequestHandler, Response, Router} from "express";
-import {parseObject} from "bookish-potato-dto";
-import {ForbiddenHttpError, methodNotAllowed, requireRole, requireScope, UnauthorizedHttpError} from "../../shared";
+import {
+    ForbiddenHttpError,
+    methodNotAllowed,
+    requireRole,
+    requireScope,
+    TypedRequest,
+    UnauthorizedHttpError
+} from "../../shared";
 import {UsersService} from "../../../domains/users";
 import {ChangePasswordDto, CreateUserDto, UpdateUserRoleDto} from "../../../dtos";
+import {validate} from "../../shared/middlewares/validate";
 
 export class UsersRouter implements RouterController {
 
@@ -25,11 +32,11 @@ export class UsersRouter implements RouterController {
 
         router.route('/')
             .get(requireRole(['ADMIN']), this.getUsers.bind(this))
-            .post(requireRole(['ADMIN']), this.createUser.bind(this))
+            .post(requireRole(['ADMIN']), validate(CreateUserDto), this.createUser.bind(this))
             .all(methodNotAllowed);
 
         router.route('/password')
-            .patch(this.changePassword.bind(this))
+            .patch(validate(ChangePasswordDto), this.changePassword.bind(this))
             .all(methodNotAllowed);
 
         router.route('/:id')
@@ -37,7 +44,7 @@ export class UsersRouter implements RouterController {
             .all(methodNotAllowed);
 
         router.route('/:id/role')
-            .patch(requireRole(['ADMIN']), this.updateUserRole.bind(this))
+            .patch(requireRole(['ADMIN']), validate(UpdateUserRoleDto), this.updateUserRole.bind(this))
             .all(methodNotAllowed);
 
         return router;
@@ -54,14 +61,13 @@ export class UsersRouter implements RouterController {
         res.status(200).json(users);
     }
 
-    private async createUser(req: Request, res: Response) {
+    private async createUser(req: TypedRequest<CreateUserDto>, res: Response) {
         const requestor = res.locals.user;
         if (!requestor) {
             throw new UnauthorizedHttpError('User not found in session');
         }
 
-        const dto = parseObject(CreateUserDto, req.body);
-        const user = await this.usersService.createUser(dto);
+        const user = await this.usersService.createUser(req.body);
 
         res.status(201).json({
             id: user.id,
@@ -72,8 +78,7 @@ export class UsersRouter implements RouterController {
         });
     }
 
-    private async changePassword(req: Request, res: Response) {
-        const dto = parseObject(ChangePasswordDto, req.body);
+    private async changePassword(req: TypedRequest<ChangePasswordDto>, res: Response) {
         const user = res.locals.user;
 
         if (!user) {
@@ -82,8 +87,8 @@ export class UsersRouter implements RouterController {
 
         await this.usersService.changePassword({
             username: user.username,
-            password: dto.password,
-            newPassword: dto.newPassword
+            password: req.body.password,
+            newPassword: req.body.newPassword
         });
 
         res.sendStatus(204);
@@ -107,7 +112,7 @@ export class UsersRouter implements RouterController {
         res.sendStatus(204);
     }
 
-    private async updateUserRole(req: Request, res: Response) {
+    private async updateUserRole(req: TypedRequest<UpdateUserRoleDto>, res: Response) {
         const requestor = res.locals.user;
         if (!requestor) {
             throw new UnauthorizedHttpError('User not found in session');
@@ -120,11 +125,9 @@ export class UsersRouter implements RouterController {
             throw new ForbiddenHttpError('You cannot change your own role');
         }
 
-        const dto = parseObject(UpdateUserRoleDto, req.body);
-
         const updatedUser = await this.usersService.updateUserRole({
             userId,
-            role: dto.role
+            role: req.body.role
         });
 
         res.status(200).json({

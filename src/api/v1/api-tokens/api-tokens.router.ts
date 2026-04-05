@@ -1,9 +1,9 @@
 import {Request, RequestHandler, Response, Router} from "express";
 import {RouterController} from "../../router-controller.type";
-import {parseObject} from "bookish-potato-dto";
 import {ApiTokensService} from "../../../domains/authentication";
 import {CreateApiTokenDto} from "../../../dtos";
-import {methodNotAllowed, requireRole, requireScope} from "../../shared";
+import {methodNotAllowed, requireRole, requireScope, TypedRequest} from "../../shared";
+import {validate} from "../../shared/middlewares/validate";
 import {User} from "../../../domains/users";
 
 export class ApiTokensRouter implements RouterController {
@@ -26,7 +26,7 @@ export class ApiTokensRouter implements RouterController {
 
         router.route('/')
             .get(requireRole(['ADMIN']), this.listApiTokens.bind(this))
-            .post(requireRole(['ADMIN']), this.createApiToken.bind(this))
+            .post(requireRole(['ADMIN']), validate(CreateApiTokenDto), this.createApiToken.bind(this))
             .all(methodNotAllowed);
 
         router.route('/:id')
@@ -47,15 +47,14 @@ export class ApiTokensRouter implements RouterController {
     }
 
 
-    private async createApiToken(req: Request, res: Response) {
+    private async createApiToken(req: TypedRequest<CreateApiTokenDto>, res: Response) {
         const user = res.locals.user as User;
-        const dto = parseObject(CreateApiTokenDto, req.body);
 
         const result = await this.apiTokensService.createApiToken({
             userId: user.id,
-            name: dto.name,
-            scope: dto.scope,
-            expiresAt: dto.expiresAt
+            name: req.body.name,
+            scope: req.body.scope,
+            expiresAt: req.body.expiresAt
         });
 
         res.status(201).json({
