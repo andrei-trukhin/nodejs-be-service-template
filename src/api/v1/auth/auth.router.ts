@@ -1,6 +1,6 @@
 import {RouterController} from "../../router-controller.type";
 import {Request, Response, Router} from "express";
-import {BooleanProperty, parseObject, StringProperty} from "bookish-potato-dto";
+import {defineDto, field, parseObject} from "bookish-potato-dto";
 import {methodNotAllowed, UnauthorizedHttpError} from "../../shared";
 import {AuthService} from "../../../domains/authentication";
 
@@ -122,17 +122,12 @@ export class AuthRouter implements RouterController {
     }
 }
 
-class AuthenticationCredentialsDto {
-    @StringProperty()
-    readonly username!: string;
-    @StringProperty()
-    readonly password!: string;
-}
+const AuthenticationCredentialsDto = defineDto({
+    username: field.string(),
+    password: field.string(),
+});
 
-class LogoutDto {
-    @BooleanProperty({
-        isOptional: true,
-    })
-    readonly allDevices?: boolean;
-}
+const LogoutDto = defineDto({
+    allDevices: field.boolean({isOptional: true}),
+});
 

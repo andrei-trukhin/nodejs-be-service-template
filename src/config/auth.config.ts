@@ -1,4 +1,4 @@
-import {CustomProperty, EnumProperty, IntegerProperty, ParsingError, StringProperty} from "bookish-potato-dto";
+import {defineDto, field, InferDto, ParsingError} from "bookish-potato-dto";
 
 export enum JwtHashAlgorithm {
     SHA256 = 'sha256',
@@ -8,15 +8,11 @@ export enum JwtHashAlgorithm {
 /**
  * Configuration for authentication service.
  */
-export class AuthConfig {
+export const AuthConfig = defineDto({
     /**
      * Used for token hashing.
      */
-    @StringProperty({
-        minLength: 16
-    })
-    readonly JWT_SECRET!: string;
-
+    JWT_SECRET: field.string({minLength: 16}),
     /**
      * Used for hashing tokens.
      * TOKEN_HASH_PEPPER is an additional secret that being used to hash tokens, providing an extra layer of security.
@@ -26,35 +22,31 @@ export class AuthConfig {
      * The first pepper in the list will be used for hashing new tokens,
      *  while all peppers will be accepted for verifying existing tokens.
      */
-    @CustomProperty({
+    TOKEN_HASH_PEPPER: field.custom<string[]>({
         parser: {
             parse: (value: unknown) => {
                 if (typeof value !== 'string') {
                     throw new ParsingError('TOKEN_HASH_PEPPER must be a comma separated array string.');
                 }
-
                 if (value.trim() === '') {
                     throw new ParsingError('TOKEN_HASH_PEPPER cannot be an empty string.');
                 }
-
-                return value.split(',').map(s => s.trim())
+                return value.split(',').map(s => s.trim());
             },
         },
-    })
-    readonly TOKEN_HASH_PEPPER!: readonly string[];
+    }),
     /**
      * Algorithm used for hashing tokens.
      */
-    @EnumProperty(JwtHashAlgorithm, {
+    JWT_HASH_ALGORITHM: field.enum(JwtHashAlgorithm, {
         defaultValue: JwtHashAlgorithm.SHA256,
-        useDefaultValueOnParseError: true
-    })
-    readonly JWT_HASH_ALGORITHM!: JwtHashAlgorithm;
-
+        useDefaultValueOnParseError: true,
+    }),
     /**
      * Used for hashing user passwords.
      */
-    @IntegerProperty({defaultValue: 10, minValue: 4, useDefaultValueOnParseError: true})
-    readonly PASSWORD_SALT_ROUNDS!: number;
-}
+    PASSWORD_SALT_ROUNDS: field.integer({defaultValue: 10, minValue: 4, useDefaultValueOnParseError: true}),
+});
+
+export type AuthConfig = InferDto<typeof AuthConfig>;
 

@@ -1,23 +1,19 @@
-import {NumberProperty, StringProperty} from "bookish-potato-dto";
+import {defineDto, field, InferDto} from "bookish-potato-dto";
 
-export class JwtTokenPayload {
+export const JwtTokenPayload = defineDto({
     /**
      * Expiration time.
      */
-    @NumberProperty()
-    readonly exp!: number;
+    exp: field.number(),
     /**
      * Issued at time.
      */
-    @NumberProperty()
-    readonly iat!: number;
+    iat: field.number(),
+    scope: field.string(),
+    sub: field.string(),
+});
 
-    @StringProperty()
-    readonly scope!: string;
-
-    @StringProperty()
-    readonly sub!: string;
-}
+export type JwtTokenPayload = InferDto<typeof JwtTokenPayload>;
 
 export type VerificationResult = {
     /**

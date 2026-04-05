@@ -1,6 +1,6 @@
 import {RouterController} from "../../router-controller.type";
 import {Request, RequestHandler, Response, Router} from "express";
-import {EnumProperty, parseObject, StringProperty} from "bookish-potato-dto";
+import {defineDto, field, parseObject} from "bookish-potato-dto";
 import {ForbiddenHttpError, methodNotAllowed, requireRole, requireScope, UnauthorizedHttpError} from "../../shared";
 import {UsersService} from "../../../domains/users";
 import {UserRole} from "../../../generated/prisma/enums";
@@ -137,28 +137,18 @@ export class UsersRouter implements RouterController {
     }
 }
 
-class CreateUserDto {
-    @StringProperty()
-    readonly username!: string;
+const CreateUserDto = defineDto({
+    username: field.string(),
+    password: field.string(),
+    role: field.enum(UserRole, {isOptional: true, defaultValue: UserRole.USER}),
+});
 
-    @StringProperty()
-    readonly password!: string;
+const ChangePasswordBodyDto = defineDto({
+    password: field.string(),
+    newPassword: field.string(),
+});
 
-    @EnumProperty(UserRole, {isOptional: true, defaultValue: UserRole.USER})
-    readonly role?: UserRole;
-}
-
-
-class ChangePasswordBodyDto {
-    @StringProperty()
-    readonly password!: string;
-
-    @StringProperty()
-    readonly newPassword!: string;
-}
-
-class UpdateUserRoleDto {
-    @EnumProperty(UserRole)
-    readonly role!: UserRole;
-}
+const UpdateUserRoleDto = defineDto({
+    role: field.enum(UserRole),
+});
 

@@ -1,20 +1,12 @@
-import {DateProperty, EnumProperty, StringProperty} from "bookish-potato-dto";
+import {defineDto, field, InferDto} from "bookish-potato-dto";
 import {TokenScope} from "../generated/prisma/enums";
 import {statusCodeValidationMessage} from "./validation-messages";
 
-export class CreateApiTokenDto {
-    @StringProperty({
-        minLength: 1,
-        maxLength: 255
-    })
-    readonly name!: string;
+export const CreateApiTokenDto = defineDto({
+    name: field.string({minLength: 1, maxLength: 255}),
+    scope: field.enum(TokenScope, {parsingErrorMessage: statusCodeValidationMessage}),
+    expiresAt: field.date(),
+});
 
-    @EnumProperty(TokenScope, {
-        parsingErrorMessage: statusCodeValidationMessage
-    })
-    readonly scope!: TokenScope;
-
-    @DateProperty()
-    readonly expiresAt!: Date;
-}
+export type CreateApiTokenDto = InferDto<typeof CreateApiTokenDto>;
 

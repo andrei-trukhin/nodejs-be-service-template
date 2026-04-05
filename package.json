@@ -44,7 +44,7 @@
     "@prisma/client": "^7.3.0",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.1",
-    "bookish-potato-dto": "^1.3.3",
+    "bookish-potato-dto": "^1.4.0-rc",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",

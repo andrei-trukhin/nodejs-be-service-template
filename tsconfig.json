@@ -9,7 +9,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "experimentalDecorators": true,
     "noImplicitAny": false
   },
   "include": ["src"],

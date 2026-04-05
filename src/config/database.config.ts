@@ -1,10 +1,8 @@
-import {StringProperty} from "bookish-potato-dto";
+import {defineDto, field, InferDto} from "bookish-potato-dto";
 
+export const DatabaseConfig = defineDto({
+    DATABASE_URL: field.string(),
+});
 
-export class DatabaseConfig {
-
-    @StringProperty()
-    readonly DATABASE_URL!: string;
-    
-}
+export type DatabaseConfig = InferDto<typeof DatabaseConfig>;
 
