@@ -1,0 +1,2 @@
+export { ConfigurationsParser as Configuration } from "./configurations.parser";
+
